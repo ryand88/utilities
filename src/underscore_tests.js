@@ -100,34 +100,76 @@ var _ = {};
     return newArr;
   };
 
-  // Takes an array of objects and returns and array of the values of
+  // Takes an array of objects and returns an array of the values of
   // a certain property in it. E.g. take an array of people and return
   // an array of just their ages
   _.pluck = function (array, propertyName) {
+    var newArr = [];
+    for (var key in array) {
+      newArr.push(array[key][propertyName]);
+    }
+    return newArr;
   };
 
   // Calls the method named by methodName on each value in the list.
   _.invoke = function (list, methodName, args) {
+    for (var i = 0; i < list.length; i++) {
+      if (typeof methodName == "string") {
+        list[i][methodName]();
+      } else {
+        methodName.call(list[i]);
+      }
+    }
+    return list;
   };
 
   // Reduces an array or object to a single value by repetitively calling
   // iterator(previousValue, item) for each item. previousValue should be
   // the return value of the previous iterator call.
   _.reduce = function (collection, iterator, initialValue) {
+    if (initialValue == undefined)
+      initialValue = 0;
+    for (var i = 0; i < collection.length; i++) {
+      initialValue = iterator(initialValue, collection[i]);
+    }
+    return initialValue;
   };
 
   // Determine if the array or object contains a given value (using `===`).
   _.contains = function (collection, target) {
+    for (var key in collection) {
+      if (collection[key] === target)
+        return true;
+    }
+    return false;
   };
 
 
   // Determine whether all of the elements match a truth test.
   _.every = function (collection, iterator) {
+    if (iterator != undefined) {
+      for (var key in collection) {
+        if (!iterator(collection[key]))
+          return false;
+      }
+    }
+    return true;
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
   _.some = function (collection, iterator) {
+    if (iterator == undefined) {
+      iterator = function (myTest) {
+        return (myTest);
+      }
+    }
+
+    for (var key in collection) {
+      if (iterator(collection[key]))
+        return true;
+    }
+    return false;
   };
 
 
@@ -141,11 +183,26 @@ var _ = {};
   // Extend a given object with all the properties of the passed in
   // object(s).
   _.extend = function (obj) {
+    var newObj = {};
+    for (var i = 0; i < arguments.length; i++) {
+      for (var key in arguments[i]) {
+        newObj[key] = arguments[i][key];
+      }
+    }
+    return newObj;
   };
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function (obj) {
+    var newObj = {};
+    for (var i = 0; i < arguments.length; i++) {
+      for (var key in arguments[i]) {
+        if (!newObj.hasOwnProperty(key))
+          newObj[key] = arguments[i][key];
+      }
+    }
+    return newObj;
   };
 
 
@@ -157,6 +214,10 @@ var _ = {};
   // Return a function that can be called at most one time. Subsequent calls
   // should return the previously returned value.
   _.once = function (func) {
+    func();
+    return function () {
+      return 0;
+    }
   };
 
   // Memoize an expensive function by storing its results. You may assume
@@ -166,6 +227,21 @@ var _ = {};
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function (func) {
+    var memo = {};
+
+    function f(n) {
+      var value;
+
+      if (n in memo) {
+        value = memo[n];
+      } else {
+        value = func(n);
+        memo[n] = value;
+      }
+      return value;
+    }
+
+    return f;
   };
 
   // Delays a function for the given number of milliseconds, and then calls
@@ -175,12 +251,27 @@ var _ = {};
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
   _.delay = function (func, wait) {
+    if (arguments.length > 2) {
+      var args = Array.prototype.splice.call(arguments, 2);
+      setTimeout(func.apply(null, args), wait);
+    } else {
+      setTimeout(func, wait);
+    }
   };
 
 
 
   // Shuffle an array.
   _.shuffle = function (array) {
+    var j, x, i, newArr = [];
+    for (i = array.length; i; i--) {
+      j = Math.floor(Math.random() * i);
+      x = array[i - 1];
+      array[i - 1] = array[j];
+      array[j] = x;
+    }
+    //newArr = array;
+    return newArr;
   };
 
   // Sort the object's values by a criterion produced by an iterator.
@@ -188,6 +279,18 @@ var _ = {};
   // of that string. For example, _.sortBy(people, 'name') should sort
   // an array of people by their name.
   _.sortBy = function (collection, iterator) {
+    if (typeof iterator == "string") {
+      var itStr = iterator;
+      iterator = function (a, b) {
+        return a[itStr] - b[itStr];
+      }
+    }
+
+    for (var i in collection) {
+      if (collection[i] == undefined)
+        return collection.sort();
+    }
+    return collection.sort(iterator);
   };
 
   // Zip together two or more arrays with elements of the same index
